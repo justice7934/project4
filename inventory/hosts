@@ -1,0 +1,10 @@
+[nginx]
+nginx1 ansible_connection=local
+nginx2 ansible_host=172.16.6.52
+
+[was]
+was1 ansible_host=172.16.6.53
+was2 ansible_host=172.16.6.54
+
+[all:vars]
+ansible_user=ansible

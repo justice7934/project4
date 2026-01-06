@@ -1,0 +1,64 @@
+- name: Install system packages
+  yum:
+    name:
+      - python3
+      - python3-pip
+    state: present
+
+- name: Create WAS base directory
+  file:
+    path: /opt/was
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0755'
+
+- name: Create WAS app directory
+  file:
+    path: /opt/was/app
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0755'
+
+- name: Copy WAS application files
+  copy:
+    src: app/
+    dest: /opt/was/app/
+    owner: ansible
+    group: ansible
+  notify: restart was
+
+- name: Create Python virtualenv
+  command: python3 -m venv /opt/was/venv
+  args:
+    creates: /opt/was/venv/bin/activate
+
+- name: Install Python dependencies
+  pip:
+    requirements: /opt/was/app/requirements.txt
+    virtualenv: /opt/was/venv
+    virtualenv_python: python3
+
+- name: Copy WAS environment file
+  copy:
+    src: was.env
+    dest: /etc/was.env
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart was
+
+- name: Install WAS systemd service
+  template:
+    src: was.service.j2
+    dest: /etc/systemd/system/was.service
+  notify:
+    - reload systemd
+    - restart was
+
+- name: Enable and start WAS service
+  systemd:
+    name: was
+    enabled: yes
+    state: started

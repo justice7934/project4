@@ -1,0 +1,7 @@
+- hosts: nginx
+  roles:
+    - nginx
+
+- hosts: was
+  roles:
+    - was

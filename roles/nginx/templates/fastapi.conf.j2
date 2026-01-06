@@ -1,0 +1,36 @@
+upstream was_api {
+    server 172.16.6.53:8000 max_fails=2 fail_timeout=5s;
+    server 172.16.6.54:8000 max_fails=2 fail_timeout=5s;
+}
+
+server {
+    listen 8000;
+    server_name auth.justic.store;
+
+    # OAuth는 한 WAS로 고정 (CSRF state 문제 방지)
+    location ^~ /auth/ {
+        proxy_pass http://172.16.6.53:8000;
+
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 2s;
+        proxy_read_timeout 30s;
+    }
+
+    # 나머지는 로드밸런싱
+    location / {
+        proxy_pass http://was_api;
+
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 2s;
+        proxy_read_timeout 30s;
+        proxy_next_upstream error timeout http_502 http_503 http_504;
+    }
+}

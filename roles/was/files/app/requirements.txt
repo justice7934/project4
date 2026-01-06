@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+requests
+pyjwt
+python-multipart
+
+sqlalchemy
+psycopg2-binary
+httpx
